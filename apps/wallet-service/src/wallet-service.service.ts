@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
 import { DataSource } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices/client/client-proxy';
+import { TransferDto } from './dto/transfer.dto';
 
 @Injectable()
 export class WalletService {
@@ -30,22 +31,22 @@ export class WalletService {
 
   // Add funds to the wallet
   async addFunds(userId: string, amount: number) {
-  const wallet = await this.findOneByUserId(userId);
-  
-  wallet.balance = Number(wallet.balance) + amount;
-  const updatedWallet = await this.walletRepository.save(wallet);
+    const wallet = await this.findOneByUserId(userId);
 
-  // Send the news to Ledger
-  this.client.emit('transaction_created', {
-    userId,
-    amount,
-    type: 'DEPOSIT',
-    balanceAfter: updatedWallet.balance,
-    createdAt: new Date(),
-  });
+    wallet.balance = Number(wallet.balance) + amount;
+    const updatedWallet = await this.walletRepository.save(wallet);
 
-  return updatedWallet;
-}
+    // Send the news to Ledger
+    this.client.emit('transaction_created', {
+      userId,
+      amount,
+      type: 'DEPOSIT',
+      balanceAfter: updatedWallet.balance,
+      createdAt: new Date(),
+    });
+
+    return updatedWallet;
+  }
 
   // Get wallet and balance data
   async findOneByUserId(userId: string) {
@@ -96,6 +97,79 @@ export class WalletService {
       return updatedWallet;
     } catch (err) {
       // If anything goes wrong, everything is rolled back
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      // Close the connection
+      await queryRunner.release();
+    }
+  }
+
+  //
+  async transfer(transferDto: TransferDto) {
+    const { senderId, receiverId, amount } = transferDto;
+
+    if (senderId === receiverId) {
+      throw new BadRequestException('Cannot transfer money to the same wallet');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Bring the sender's wallet with a lock to prevent any simultaneous modification
+      const sender = await queryRunner.manager.findOne(Wallet, {
+        where: { userId: senderId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!sender) throw new NotFoundException('Sender wallet not found');
+
+      // 2. Check balance
+      const senderBalance = Number(sender.balance);
+      if (senderBalance < amount) {
+        throw new BadRequestException('Insufficient funds');
+      }
+
+      // 3. Bring the wallet of the future with a lock
+      const receiver = await queryRunner.manager.findOne(Wallet, {
+        where: { userId: receiverId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!receiver) throw new NotFoundException('Receiver wallet not found');
+
+      // 4. Performing the calculation
+      sender.balance = senderBalance - amount;
+      receiver.balance = Number(receiver.balance) + amount;
+
+      // 5. Save both sides
+      await queryRunner.manager.save([sender, receiver]);
+
+      // 6. Confirm the operation in the database
+      await queryRunner.commitTransaction();
+
+      // 7. Sending events to the Ledger (two notifications: one for the sender and one for the receiver)
+      this.client.emit('transaction_created', {
+        userId: senderId,
+        amount: -amount, // Negative because it is an opponent
+        type: 'TRANSFER_OUT',
+        balanceAfter: sender.balance,
+        referenceId: receiverId,
+      });
+
+      this.client.emit('transaction_created', {
+        userId: receiverId,
+        amount: amount, // Positive because it is a deposit
+        type: 'TRANSFER_IN',
+        balanceAfter: receiver.balance,
+        referenceId: senderId,
+      });
+
+      return { message: 'Transfer completed successfully', amount };
+    } catch (err) {
+      // If anything goes wrong, undo everything
       await queryRunner.rollbackTransaction();
       throw err;
     } finally {

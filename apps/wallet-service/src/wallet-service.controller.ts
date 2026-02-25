@@ -3,6 +3,7 @@ import { WalletService } from './wallet-service.service';
 import { UpdateBalanceDto } from './dto/update-balance.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { TransferDto } from './dto/transfer.dto';
 
 @Controller('wallets')
 export class WalletController {
@@ -36,5 +37,11 @@ export class WalletController {
       withdrawDto.userId,
       withdrawDto.amount,
     );
+  }
+
+  // POST /wallets/transfer
+  @Post('transfer')
+  async transfer(@Body() transferDto: TransferDto) {
+    return await this.walletService.transfer(transferDto);
   }
 }

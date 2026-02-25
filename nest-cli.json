@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/paystream-backend/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/paystream-backend/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/paystream-backend",
+  "projects": {
+    "paystream-backend": {
+      "type": "application",
+      "root": "apps/paystream-backend",
+      "entryFile": "main",
+      "sourceRoot": "apps/paystream-backend/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/paystream-backend/tsconfig.app.json"
+      }
+    },
+    "wallet-service": {
+      "type": "application",
+      "root": "apps/wallet-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/wallet-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/wallet-service/tsconfig.app.json"
+      }
+    }
+  }
+}

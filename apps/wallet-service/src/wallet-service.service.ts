@@ -105,9 +105,9 @@ export class WalletService {
     }
   }
 
-  //
-  async transfer(transferDto: TransferDto) {
-    const { senderId, receiverId, amount } = transferDto;
+  // Transfer money between wallets
+  async transfer(senderId: string, transferDto: TransferDto) {
+    const { receiverId, amount } = transferDto;
 
     if (senderId === receiverId) {
       throw new BadRequestException('Cannot transfer money to the same wallet');

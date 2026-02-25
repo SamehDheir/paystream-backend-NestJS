@@ -27,7 +27,7 @@ export class LedgerServiceService {
   }
 
   // 
-  async getLogsByUserId(userId: string) {
+  async getMyHistory(userId: string) {
     return await this.transactionRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },

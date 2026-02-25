@@ -2,10 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { LedgerServiceModule } from './ledger-service.module';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(LedgerServiceModule);
-  
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
@@ -16,10 +17,10 @@ async function bootstrap() {
   });
 
   app.useGlobalPipes(new ValidationPipe());
-  
+
   await app.startAllMicroservices();
-  
-  await app.listen(3001); 
+  app.use(cookieParser());
+  await app.listen(3001);
   console.log('Ledger Service is running on: http://localhost:3001');
 }
 bootstrap();

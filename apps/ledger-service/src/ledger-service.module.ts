@@ -3,9 +3,17 @@ import { LedgerServiceController } from './ledger-service.controller';
 import { LedgerServiceService } from './ledger-service.service';
 import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
 import { Transaction } from './entities/transaction.entity';
+import { JwtModule } from '@nestjs/jwt/dist/jwt.module';
+import { PassportModule } from '@nestjs/passport/dist/passport.module';
+import { JwtStrategy } from 'apps/wallet-service/src/jwt.strategy';
 
 @Module({
   imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({
+      secret: 'SUPER_SECRET_KEY',
+      signOptions: { expiresIn: '1h' },
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -19,6 +27,6 @@ import { Transaction } from './entities/transaction.entity';
     TypeOrmModule.forFeature([Transaction]),
   ],
   controllers: [LedgerServiceController],
-  providers: [LedgerServiceService],
+  providers: [LedgerServiceService,JwtStrategy],
 })
 export class LedgerServiceModule {}

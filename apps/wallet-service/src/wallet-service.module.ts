@@ -4,9 +4,12 @@ import { Wallet } from './entities/wallet.entity';
 import { WalletService } from './wallet-service.service';
 import { WalletController } from './wallet-service.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.register([
       {
         name: 'LEDGER_SERVICE',
@@ -33,6 +36,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     TypeOrmModule.forFeature([Wallet]),
   ],
   controllers: [WalletController],
-  providers: [WalletService],
+  providers: [WalletService,JwtStrategy],
 })
 export class WalletServiceModule {}

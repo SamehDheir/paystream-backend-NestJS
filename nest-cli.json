@@ -10,6 +10,15 @@
   "monorepo": true,
   "root": "apps/paystream-backend",
   "projects": {
+    "ledger-service": {
+      "type": "application",
+      "root": "apps/ledger-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ledger-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ledger-service/tsconfig.app.json"
+      }
+    },
     "paystream-backend": {
       "type": "application",
       "root": "apps/paystream-backend",

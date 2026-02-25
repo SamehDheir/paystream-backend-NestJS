@@ -3,9 +3,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Wallet } from './entities/wallet.entity';
 import { WalletService } from './wallet-service.service';
 import { WalletController } from './wallet-service.controller';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
+    ClientsModule.register([
+      {
+        name: 'LEDGER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'ledger_queue',
+        },
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

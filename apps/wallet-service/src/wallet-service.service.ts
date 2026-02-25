@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,10 +8,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
 import { DataSource } from 'typeorm';
+import { ClientProxy } from '@nestjs/microservices/client/client-proxy';
 
 @Injectable()
 export class WalletService {
   constructor(
+    @Inject('LEDGER_SERVICE') private client: ClientProxy,
     @InjectRepository(Wallet)
     private walletRepository: Repository<Wallet>,
     private dataSource: DataSource,
@@ -69,11 +72,18 @@ export class WalletService {
       wallet.balance = currentBalance - amount;
 
       // 4. Save
-      await queryRunner.manager.save(wallet);
+      const updatedWallet = await queryRunner.manager.save(wallet);
 
       // Confirm the process
-      await queryRunner.commitTransaction();
-      return wallet;
+      this.client.emit('transaction_created', {
+        userId,
+        amount,
+        type: 'WITHDRAW',
+        balanceAfter: updatedWallet.balance,
+        createdAt: new Date(),
+      });
+
+      return updatedWallet;
     } catch (err) {
       // If anything goes wrong, everything is rolled back
       await queryRunner.rollbackTransaction();

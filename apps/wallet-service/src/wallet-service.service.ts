@@ -30,12 +30,22 @@ export class WalletService {
 
   // Add funds to the wallet
   async addFunds(userId: string, amount: number) {
-    const wallet = await this.findOneByUserId(userId);
+  const wallet = await this.findOneByUserId(userId);
+  
+  wallet.balance = Number(wallet.balance) + amount;
+  const updatedWallet = await this.walletRepository.save(wallet);
 
-    wallet.balance = Number(wallet.balance) + amount;
+  // Send the news to Ledger
+  this.client.emit('transaction_created', {
+    userId,
+    amount,
+    type: 'DEPOSIT',
+    balanceAfter: updatedWallet.balance,
+    createdAt: new Date(),
+  });
 
-    return await this.walletRepository.save(wallet);
-  }
+  return updatedWallet;
+}
 
   // Get wallet and balance data
   async findOneByUserId(userId: string) {

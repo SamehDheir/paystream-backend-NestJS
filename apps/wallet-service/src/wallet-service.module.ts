@@ -15,7 +15,7 @@ import { JwtStrategy } from './jwt.strategy';
         name: 'LEDGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://localhost:5672'],
+          urls: ['amqp://guest:guest@127.0.0.1:5672'],
           queue: 'ledger_queue',
           queueOptions: {
             durable: true,
@@ -36,6 +36,6 @@ import { JwtStrategy } from './jwt.strategy';
     TypeOrmModule.forFeature([Wallet]),
   ],
   controllers: [WalletController],
-  providers: [WalletService,JwtStrategy],
+  providers: [WalletService, JwtStrategy],
 })
 export class WalletServiceModule {}

@@ -86,6 +86,7 @@ export class WalletService {
       const updatedWallet = await queryRunner.manager.save(wallet);
 
       // Confirm the process
+      console.log('New transaction received via RabbitMQ')
       this.client.emit('transaction_created', {
         userId,
         amount,

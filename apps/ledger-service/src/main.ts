@@ -6,13 +6,18 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  const user = process.env.RABBITMQ_USER;
+  const pass = process.env.RABBITMQ_PASS;
+  const host = process.env.RABBITMQ_HOST;
+  const port = process.env.RABBITMQ_PORT;
+  
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(LedgerServiceModule);
 
   const microservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: ['amqp://guest:guest@127.0.0.1:5672'],
+      urls: [`amqp://${user}:${pass}@${host}:${port}`],
       queue: 'ledger_queue',
       queueOptions: {
         durable: true,

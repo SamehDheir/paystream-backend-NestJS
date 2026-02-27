@@ -6,20 +6,35 @@ import { WalletController } from './wallet-service.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { ConfigModule } from '@nestjs/config';
+
+const user = process.env.RABBITMQ_USER;
+const pass = process.env.RABBITMQ_PASS;
+const host = process.env.RABBITMQ_HOST;
+const port = process.env.RABBITMQ_PORT;
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.register([
       {
         name: 'LEDGER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://guest:guest@127.0.0.1:5672'],
+          urls: [`amqp://${user}:${pass}@${host}:${port}`],
           queue: 'ledger_queue',
           queueOptions: {
             durable: true,
           },
+        },
+      },
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://guest:guest@localhost:5672'],
+          queue: 'notification_queue',
         },
       },
     ]),

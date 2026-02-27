@@ -6,9 +6,11 @@ import { Transaction } from './entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt/dist/jwt.module';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { JwtStrategy } from 'apps/wallet-service/src/jwt.strategy';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: 'SUPER_SECRET_KEY',

@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn, CreateDateColumn, VersionColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  UpdateDateColumn,
+  CreateDateColumn,
+  VersionColumn,
+} from 'typeorm';
 
 @Entity('wallets')
 export class Wallet {
@@ -7,6 +14,9 @@ export class Wallet {
 
   @Column({ type: 'uuid', unique: true })
   userId: string;
+
+  @Column({ unique: true })
+  email: string;
 
   @Column({ type: 'decimal', precision: 19, scale: 4, default: 0 })
   balance: number;

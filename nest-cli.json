@@ -37,6 +37,15 @@
         "tsConfigPath": "apps/ledger-service/tsconfig.app.json"
       }
     },
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
+      }
+    },
     "paystream-backend": {
       "type": "application",
       "root": "apps/paystream-backend",

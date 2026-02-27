@@ -23,7 +23,7 @@ export class WalletController {
   @ApiResponse({ status: 201, description: 'Wallet created successfully' })
   @Post()
   async create(@CurrentUser() user: any) {
-    return await this.walletService.create(user.userId);
+    return await this.walletService.create(user.userId, user.email);
   }
 
   //

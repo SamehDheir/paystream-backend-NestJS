@@ -14,16 +14,22 @@ import { TransferDto } from './dto/transfer.dto';
 @Injectable()
 export class WalletService {
   constructor(
-    @Inject('LEDGER_SERVICE') private client: ClientProxy,
-    @InjectRepository(Wallet)
-    private walletRepository: Repository<Wallet>,
+    @Inject('LEDGER_SERVICE') private ledgerClient: ClientProxy,
+    @Inject('NOTIFICATION_SERVICE') private notificationClient: ClientProxy,
+    @InjectRepository(Wallet) private walletRepository: Repository<Wallet>,
     private dataSource: DataSource,
   ) {}
 
+  private emitTransaction(data: any) {
+    this.ledgerClient.emit('transaction_created', data);
+    this.notificationClient.emit('transaction_created', data);
+  }
+
   // Create a new wallet for a user
-  async create(userId: string) {
+  async create(userId: string, email: string) {
     const newWallet = this.walletRepository.create({
       userId,
+      email,
       balance: 0,
     });
     return await this.walletRepository.save(newWallet);
@@ -37,8 +43,9 @@ export class WalletService {
     const updatedWallet = await this.walletRepository.save(wallet);
 
     // Send the news to Ledger
-    this.client.emit('transaction_created', {
+    this.emitTransaction({
       userId,
+      email: wallet.email,
       amount,
       type: 'DEPOSIT',
       balanceAfter: updatedWallet.balance,
@@ -84,11 +91,11 @@ export class WalletService {
 
       // 4. Save
       const updatedWallet = await queryRunner.manager.save(wallet);
-
+      await queryRunner.commitTransaction();
       // Confirm the process
-      console.log('New transaction received via RabbitMQ')
-      this.client.emit('transaction_created', {
+      this.emitTransaction({
         userId,
+        email: wallet.email,
         amount,
         type: 'WITHDRAW',
         balanceAfter: updatedWallet.balance,
@@ -152,16 +159,18 @@ export class WalletService {
       await queryRunner.commitTransaction();
 
       // 7. Sending events to the Ledger (two notifications: one for the sender and one for the receiver)
-      this.client.emit('transaction_created', {
+      this.emitTransaction({
         userId: senderId,
+        email: sender.email,
         amount: -amount, // Negative because it is an opponent
         type: 'TRANSFER_OUT',
         balanceAfter: sender.balance,
         referenceId: receiverId,
       });
 
-      this.client.emit('transaction_created', {
+      this.emitTransaction({
         userId: receiverId,
+        email: receiver.email,
         amount: amount, // Positive because it is a deposit
         type: 'TRANSFER_IN',
         balanceAfter: receiver.balance,

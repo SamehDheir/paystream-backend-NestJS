@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Res, HttpStatus, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthServiceService } from './auth-service.service';
 import type { Response } from 'express';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -25,6 +32,7 @@ export class AuthServiceController {
       loginDto.username,
       loginDto.password,
     );
+    
 
     // Setting up the HttpOnly Cookie
     response.cookie('access_token', result.access_token, {
@@ -40,10 +48,17 @@ export class AuthServiceController {
   // POST /auth/register
   @ApiOperation({ summary: 'Create a new user account' })
   @ApiResponse({ status: 201, description: 'User successfully registered.' })
-  @ApiResponse({ status: 400, description: 'Username already exists or weak password.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Username already exists or weak password.',
+  })
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) { 
-    return await this.authService.register(registerDto.username, registerDto.password);
+  async register(@Body() registerDto: RegisterDto) {
+    return await this.authService.register(
+      registerDto.username,
+      registerDto.email,
+      registerDto.password,
+    );
   }
 
   // POST /auth/logout

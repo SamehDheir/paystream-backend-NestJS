@@ -25,20 +25,30 @@ export class AuthServiceService {
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    const payload = { sub: user.id, username: user.username };
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      email: user.email,
+    };
+
     return {
       access_token: await this.jwtService.signAsync(payload),
-      user: { id: user.id, username: user.username },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
     };
   }
 
   // Register method to create new users with hashed passwords
-  async register(username: string, pass: string) {
+  async register(username: string, email: string, pass: string) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(pass, salt);
 
     const user = this.userRepository.create({
       username,
+      email,
       password: hashedPassword,
     });
 

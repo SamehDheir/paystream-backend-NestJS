@@ -6,48 +6,58 @@ import { WalletController } from './wallet-service.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
-import { ConfigModule } from '@nestjs/config';
-
-const user = process.env.RABBITMQ_USER;
-const pass = process.env.RABBITMQ_PASS;
-const host = process.env.RABBITMQ_HOST;
-const port = process.env.RABBITMQ_PORT;
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    ClientsModule.register([
+
+    ClientsModule.registerAsync([
       {
         name: 'LEDGER_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [`amqp://${user}:${pass}@${host}:${port}`],
-          queue: 'ledger_queue',
-          queueOptions: {
-            durable: true,
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              `amqp://${configService.get('RABBITMQ_USER')}:${configService.get('RABBITMQ_PASS')}@${configService.get('RABBITMQ_HOST')}:${configService.get('RABBITMQ_PORT')}`,
+            ],
+            queue: 'ledger_queue',
+            queueOptions: { durable: true },
           },
-        },
+        }),
       },
       {
         name: 'NOTIFICATION_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://guest:guest@localhost:5672'],
-          queue: 'notification_queue',
-        },
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [
+              `amqp://${configService.get('RABBITMQ_USER')}:${configService.get('RABBITMQ_PASS')}@${configService.get('RABBITMQ_HOST')}:${configService.get('RABBITMQ_PORT')}`,
+            ],
+            queue: 'notification_queue',
+          },
+        }),
       },
     ]),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123456789',
-      database: 'paystream_db',
-      entities: [Wallet],
-      synchronize: true,
+
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASS'),
+        database: configService.get<string>('DB_NAME'),
+        entities: [Wallet],
+        synchronize: true,
+      }),
     }),
+
     TypeOrmModule.forFeature([Wallet]),
   ],
   controllers: [WalletController],

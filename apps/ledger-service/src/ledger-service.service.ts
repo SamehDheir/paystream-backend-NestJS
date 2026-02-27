@@ -11,22 +11,24 @@ export class LedgerServiceService {
     private transactionRepository: Repository<Transaction>,
   ) {}
 
-  // 
+  //
   async createLog(data: Partial<Transaction>) {
     try {
-      const log = this.transactionRepository.create(data);
-      const savedLog = await this.transactionRepository.save(log);
+      const log = this.transactionRepository.create({
+        userId: data.userId,
+        type: data.type,
+        amount: data.amount,
+        balanceAfter: data.balanceAfter,
+      });
 
-      this.logger.log(
-        `Transaction logged: ${savedLog.id} - Type: ${savedLog.type}`,
-      );
+      const savedLog = await this.transactionRepository.save(log);
+      this.logger.log(`✅ Transaction saved: ${savedLog.id}`);
       return savedLog;
     } catch (error) {
-      this.logger.error('Failed to save transaction log', error.stack);
+      this.logger.error('❌ Database Save Error', error.stack);
     }
   }
-
-  // 
+  //
   async getMyHistory(userId: string) {
     return await this.transactionRepository.find({
       where: { userId },

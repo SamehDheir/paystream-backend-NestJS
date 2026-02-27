@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) { 
+  constructor(private configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
@@ -18,13 +18,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('SUPER_SECRET_KEY')!, 
+      secretOrKey: configService.get<string>('SUPER_SECRET_KEY')!,
     });
   }
 
   async validate(payload: any) {
     return {
-      userId: payload.sub,
+      userId: payload.sub, 
       username: payload.username,
       email: payload.email,
     };

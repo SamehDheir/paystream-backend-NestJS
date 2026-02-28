@@ -22,7 +22,7 @@ export class EmailService {
   async sendTransactionAlert(to: string, data: any) {
     const { type, amount, userId, balanceAfter } = data;
     const isDeposit = type.toLowerCase() === 'deposit';
-    const accentColor = isDeposit ? '#28a745' : '#dc3545'; // أخضر للإيداع، أحمر للسحب
+    const accentColor = isDeposit ? '#28a745' : '#dc3545';
 
     try {
       await this.transporter.sendMail({

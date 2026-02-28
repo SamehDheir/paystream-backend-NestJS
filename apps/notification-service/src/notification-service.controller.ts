@@ -13,14 +13,21 @@ export class NotificationServiceController {
       data,
     );
 
+    const recipientEmail = data.email;
+
+    if (!recipientEmail) {
+      console.error('❌ No email found in the transaction data!');
+      return;
+    }
+
     try {
       await this.emailService.sendTransactionAlert(
-        'your-personal-email@gmail.com',
+        recipientEmail, 
         data,
       );
-      console.log('✅ The email was sent successfully!');
+      console.log(`✅ The email was sent successfully to: ${recipientEmail}`);
     } catch (error) {
-      console.error('❌ Email sending failed:', error);
+      console.error('❌ Email sending failed:', error.message);
     }
   }
 }

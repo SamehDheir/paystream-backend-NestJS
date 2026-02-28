@@ -6,29 +6,39 @@ import { Transaction } from './entities/transaction.entity';
 import { JwtModule } from '@nestjs/jwt/dist/jwt.module';
 import { PassportModule } from '@nestjs/passport/dist/passport.module';
 import { JwtStrategy } from './jwt.strategy';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: 'SUPER_SECRET_KEY',
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<number>('JWT_EXPIRES_IN'),
+        },
+      }),
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'password',
-      database: 'paystream_db',
-      entities: [Transaction],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST', 'postgres'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASS'),
+        database: configService.get<string>('DB_NAME'),
+        entities: [Transaction],
+        synchronize: true,
+        retryAttempts: 20,
+        retryDelay: 5000,
+      }),
     }),
     TypeOrmModule.forFeature([Transaction]),
   ],
   controllers: [LedgerServiceController],
-  providers: [LedgerServiceService,JwtStrategy],
+  providers: [LedgerServiceService, JwtStrategy],
 })
 export class LedgerServiceModule {}

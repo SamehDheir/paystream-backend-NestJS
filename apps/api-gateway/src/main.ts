@@ -7,8 +7,8 @@ async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
 
   const limiter = rateLimit({
-    windowMs: 60 * 1000, 
-    max: 5, 
+    windowMs: 60 * 1000,
+    max: 5,
     message: { statusCode: 429, message: 'Too many requests from this IP' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -19,9 +19,11 @@ async function bootstrap() {
   app.use(
     createProxyMiddleware({
       router: (req) => {
-        if (req.url?.startsWith('/wallets')) return 'http://localhost:3000';
-        if (req.url?.startsWith('/ledger')) return 'http://localhost:3001';
-        if (req.url?.startsWith('/auth')) return 'http://localhost:3002';
+        if (req.url?.startsWith('/wallets'))
+          return process.env.WALLET_SERVICE_URL;
+        if (req.url?.startsWith('/ledger'))
+          return process.env.LEDGER_SERVICE_URL;
+        if (req.url?.startsWith('/auth')) return process.env.AUTH_SERVICE_URL;
       },
       changeOrigin: true,
       on: {

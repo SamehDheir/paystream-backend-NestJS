@@ -10,6 +10,42 @@
   "monorepo": true,
   "root": "apps/paystream-backend",
   "projects": {
+    "api-gateway": {
+      "type": "application",
+      "root": "apps/api-gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/api-gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
+      }
+    },
+    "auth-service": {
+      "type": "application",
+      "root": "apps/auth-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/auth-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth-service/tsconfig.app.json"
+      }
+    },
+    "ledger-service": {
+      "type": "application",
+      "root": "apps/ledger-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/ledger-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ledger-service/tsconfig.app.json"
+      }
+    },
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
+      }
+    },
     "paystream-backend": {
       "type": "application",
       "root": "apps/paystream-backend",
